@@ -6,13 +6,18 @@ pub struct Trial {
 }
 
 impl Trial {
-    pub fn new(x: f64, y: f64) -> Self {
-        Self { x, y }
+    pub fn new(weights: &[f64]) -> Self {
+        Self {
+            x: weights[0],
+            y: weights[1],
+        }
     }
 }
 
 impl Objective for Trial {
     fn evaluate(&self) -> f64 {
-        (self.x - 3.0).powi(2) + (self.y + 1.0).powi(2) + (3.0 * self.x).sin() * (5.0 * self.y).cos()
+        (self.x - 3.0).powi(2)
+            + (self.y + 1.0).powi(2)
+            + (3.0 * self.x).sin() * (5.0 * self.y).cos()
     }
 }
