@@ -11,4 +11,8 @@ impl Objective for Trial {
         let result = (x - 3.0).powi(2) + (y + 1.0).powi(2) + (3.0 * x).sin() * (5.0 * y).cos();
         -result
     }
+    
+    fn get_weight_length(&self) -> usize {
+        2
+    }
 }

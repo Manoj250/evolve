@@ -1,14 +1,19 @@
 mod agent;
 mod objective;
+mod evolution_engine;
 
 use agent::agent::Agent;
 use objective::trial::Trial;
+use evolution_engine::engine::Engine;
 
 #[tokio::main]
 async fn main() {
-    let weights = vec![2.0, 3.0];
     let trial = Trial;
-    let mut agent = Agent::new(weights, trial);
-    agent.run().await;
-    println!("Agent score: {}", agent.score);
+    let num_generations = 100;
+    let num_agents = 100;
+    let top_k = 10;
+    let mutation_percent = 10.0;
+    let engine = Engine::new(num_generations, num_agents, top_k);   
+    engine.run(mutation_percent, trial).await;
+    println!("Evolution completed."); 
 }
