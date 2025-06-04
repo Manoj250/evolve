@@ -1,19 +1,18 @@
 mod agent;
-mod objective;
 mod evolution_engine;
+mod objective;
 
-use agent::agent::Agent;
-use objective::trial::Trial;
 use evolution_engine::engine::Engine;
+use objective::trial::Trial;
 
 #[tokio::main]
 async fn main() {
-    let trial = Trial;
-    let num_generations = 100;
-    let num_agents = 100;
-    let top_k = 10;
+    let num_generations = 1000;
+    let num_agents = 1000;
+    let top_k = 100;
     let mutation_percent = 10.0;
-    let engine = Engine::new(num_generations, num_agents, top_k);   
-    engine.run(mutation_percent, trial).await;
-    println!("Evolution completed."); 
+    let trial = Box::new(Trial);
+    let engine = Engine::new(num_generations, num_agents, top_k);
+    engine.start_the_royal_rumble(mutation_percent, trial).await;
+    println!("Evolution completed.");
 }

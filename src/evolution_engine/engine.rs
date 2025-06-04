@@ -1,13 +1,17 @@
-use crate::agent::Agent;
+use crate::agent::agent::Agent;
 use crate::objective::Objective;
+use futures::future::join_all;
+use rand::Rng;
+use std::fs::OpenOptions;
+use std::io::Write;
 
-pub struct Engine<T: Objective> {
+pub struct Engine {
     pub num_generations: i32,
     pub num_agents: i32,
     pub top_k: i32,
 }
 
-impl<T: Objective + Send + Sync + 'static> Engine<T> {
+impl Engine {
     pub fn new(num_generations: i32, num_agents: i32, top_k: i32) -> Self {
         Self {
             num_generations,
@@ -17,46 +21,71 @@ impl<T: Objective + Send + Sync + 'static> Engine<T> {
     }
 
     fn generate_random_weights(length: usize) -> Vec<f64> {
-        let mut rng = rand::thread_rng();
-        (0..length).map(|_| rng.gen_range(-1.0..1.0)).collect()
+        let mut rng = rand::rng();
+        (0..length).map(|_| rng.random_range(-1.0..1.0)).collect()
     }
 
     fn mutate(weights: &[f64], mutation_percent: f64) -> Vec<f64> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         weights
             .iter()
             .map(|w| {
-                let mutation = 1.0 + rng.gen_range(-mutation_percent..mutation_percent) / 100.0;
+                let mutation = 1.0 + rng.random_range(-mutation_percent..mutation_percent) / 100.0;
                 w * mutation
             })
             .collect()
     }
 
-    pub async fn run(&self, mutation_percent: f64, objective: T) {
+    fn write_to_file(elites: &[Agent]) {
+        let mut file = OpenOptions::new()
+            .create(true) // create if not exists
+            .append(true) // append, don’t erase
+            .open("top_performers.csv")
+            .expect("Can't open file");
 
+        for agent in elites {
+            let weight_str = agent
+                .weights
+                .iter()
+                .map(|w| w.to_string())
+                .collect::<Vec<_>>()
+                .join(" ");
+            writeln!(file, "{},{}", agent.score, weight_str).unwrap();
+        }
+    }
+
+    pub async fn start_the_royal_rumble(
+        &self,
+        mutation_percent: f64,
+        objective: Box<dyn Objective + Send + Sync>,
+    ) {
         let weight_len = objective.get_weight_length();
 
-        let mut population: Vec<Agent<T>> = (0..self.num_agents)
-            .map(|_| Agent::new(generate_random_weights(weight_len), objective.clone()))
+        let mut population: Vec<Agent> = (0..self.num_agents)
+            .map(|_| {
+                Agent::new(
+                    Self::generate_random_weights(weight_len),
+                    objective.clone_box(),
+                )
+            })
             .collect();
 
         for _ in 0..self.num_generations {
-            // Run all agents concurrently
             let futures = population.iter_mut().map(|agent| agent.run());
             join_all(futures).await;
 
-            // Sort by score DESCENDING
             population.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
 
             println!("Top Score: {}", population[0].score);
 
-            // Keep top_k, mutate to make new population
             let elites = &population[0..self.top_k as usize];
+            Self::write_to_file(elites);
+
             population = (0..self.num_agents)
                 .map(|_| {
-                    let parent = &elites[rand::thread_rng().gen_range(0..elites.len())];
-                    let mutated_weights = mutate(&parent.weights, mutation_percent);
-                    Agent::new(mutated_weights, objective.clone())
+                    let parent = &elites[rand::rng().random_range(0..elites.len())];
+                    let mutated_weights = Self::mutate(&parent.weights, mutation_percent);
+                    Agent::new(mutated_weights, objective.clone_box())
                 })
                 .collect();
         }
