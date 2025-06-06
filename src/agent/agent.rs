@@ -1,5 +1,6 @@
 use crate::objective::Objective;
 
+#[derive(Clone)]
 pub struct Agent {
     pub weights: Vec<f64>,
     pub score: f64,
