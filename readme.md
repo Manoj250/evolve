@@ -1,6 +1,6 @@
 # Rusty Evolution Engine ⚡️💨
 
-This beast is written in **Rust** — fast as f***, no BS.  
+This is written in **Rust**.  
 
 Just **extend the `Objective` trait** to plug in your own problem, and watch this thing go full throttle 🔥🚀
 
@@ -11,10 +11,7 @@ Just **extend the `Objective` trait** to plug in your own problem, and watch thi
 **How to use?**  
 1. Implement your own `Objective` logic  
 2. Feed it into `Engine`  
-3. Sit back and let it *vroom vroom* through generations like a champ 🏎️💨
-
-Built for speed, built for swag. Rustaceans rejoice! 🦀💥
-
+3. Sit back and let it *vroom vroom* through generations 🏎️💨
 ---
 
-*Powered by sheer code insanity and the spirit of optimization*
+*Powered by the spirit of optimization*
